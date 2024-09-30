@@ -3,11 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 import uvicorn
-import tkinter as tk
+
 import requests
 import os
 import re
-from PIL import Image, ImageOps
+from PIL import Image
 from io import BytesIO
 
 import torch
@@ -144,55 +144,9 @@ def model_inference(data: FilePath):
     
 
 
-# Тестовый маршрут : инициализирует  окно для ввода  url, path , делает postrequest  к post маршруту
-@ app.get('/forms/')
-def out_form():
-    root = tk.Tk() # Создаем главное окно
-    root.title("Введите адрес документа")
-    root.geometry("600x200")  # Устанавливаем размер окна (ширина x высота)
-
-    label = tk.Label(root, text="Введите адрес документа:")
-    label.pack(pady=10)
-
-    entry = tk.Text(root, width=70, height=3)  # Ширина поля ввода
-    entry.pack(pady=10)
-    entry.insert(tk.INSERT, "data\\405___e989c7d20dd04eec89042272ca1a84b3_3.png") 
-    
-    button_frame = tk.Frame(root) # фрейм для кнопок
-    button_frame.pack(side=tk.BOTTOM, fill=tk.X)
-    
-    cancel= False 
-    def cancel_ok():
-        nonlocal cancel
-        cancel=True
-        root.quit()
-
-
-    # Добавляем кнопки
-    button_ok = tk.Button(button_frame, text="OK",width=20, command=root.quit)
-    button_ok.pack(side=tk.LEFT, padx=20, pady=20)
-    button_cancel = tk.Button(button_frame, text="Cancel",width=20, command=cancel_ok)  # Закрываем окно при нажатии "Отмена"
-    button_cancel.pack(side=tk.RIGHT, padx=20, pady=20)
-
-    root.protocol("WM_DELETE_WINDOW", cancel_ok)
-
-    root.mainloop() # Запускаем главный цикл
-
-    path = entry.get("1.0", tk.END).strip()
-    root.destroy()
-
-    url_base='http://127.0.0.1:8000/forms/'  
-    data = {"path": path}
-    response = requests.post(url_base, json=data)
-
-    if cancel:
-        cancel=False
-        return {'get_request':'Cancelled'}
-
-    return {'get_request': path, 'post_response': response.json()}
 
 
 
 
 if __name__=='__main__':
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
