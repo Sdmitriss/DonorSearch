@@ -1,3 +1,35 @@
+'''
+Этот  FastAPI приложение которое предсказывает положение документа ((Вертикально- 0, 90'- 1, 180'- 2, 270'- 3)),
+на сонове предсказания трансформирует ориентацию в вертикальное положение,
+записывает трансформировнный файл в папку 'transformed_images',
+возвращает json ответ, содержащий:
+{'post_request':data.path,  //строку  запроса : url или  путь к файлу,  указанный в post request
+ 'save_path':save_path, - //путь к файлу
+ 'save_url':save_url,  - //адрес  файла
+ 'pred:pred.item() - //предсказание положения докомента
+}
+Папка /app/transformed_images  смонтирована по маршруту /transformed_images
+ Маршруты:
+- `/forms/` (POST) вызывает def model_inference(data: FilePath)  data = {"path": path} где path
+строка c адресом или путь к файлу.
+FilePath  - пользовательский  класс, проверяющий тип перменной path : str,
+в скрипте предусмотрна обработка пременной path для исключения ошибок выполнения скрипта.
+функция  для  извлечения имени файла из get.request or url - name_url 
+структура:
+model_inference_final(model, path): принимеает  model -  обученная модель, path - переменая path 
+    load_image(path) возвращает  загруженный документ image  и имя файла file_name
+       check_url (path)  вызывается приусловии path  не путь, обрабатывает get request(path)
+                          возвращает в  случае успеха  response
+       name_url(response) возвращает  file_name
+
+ возвращает  pred, save_path, save_url 
+ '''                    
+
+
+
+
+
+
 from fastapi import FastAPI,HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -50,7 +82,7 @@ def name_url(response,extension):
         match=re.search(r'filename=["\']?([^"\']+)["\']?', content_disposition)
         if match: 
             return  match.group(1)
- #  
+
  # Извлечение  имени файла из URL -  убираем название хоста, удаляем запрещенные символы, добавляем extension 
     name =re.sub(r'https?://[^/]+', '', response.url)
     name =re.sub(r'[<>:"/\\|?*]', '_', name)
@@ -66,15 +98,17 @@ def name_url(response,extension):
 # Обрабатывает ошибки, возвращает  image  или или вызывает исключение (raise).
 # 
 def load_image(data_path: str):
-    if os.path.exists(data_path):
+    # Предполагаем, что path - путь к файлу
+    data_path_norm = data_path.replace("\\", "/")                              
+    if os.path.exists(data_path_norm): # действительно является локальным path
         try:
-            image = Image.open(data_path)
-            file_name=os.path.basename(data_path)
+            image = Image.open(data_path_norm)
+            file_name=os.path.basename(data_path_norm)
             return image, file_name
-        except Exception as e:
+        except Exception as e: 
             raise HTTPException(status_code=400, detail=f'Error opening image from path: {str(e)}')
 
-    elif check_url(data_path):
+    elif check_url(data_path): # path не  путь! возможно url?
         try:
             response = check_url(data_path)
             image = Image.open(BytesIO(response.content))
@@ -99,7 +133,7 @@ transform_test_valid =transforms.Compose([
     transforms.Resize((224,224))
  ]) 
 
-# 
+# Функция для предсказания, трансформации положения и записи изображения в папку transformed_images
 def model_inference_final(model, path):
     to_tensor = transforms.ToTensor()
 
@@ -129,7 +163,7 @@ def model_inference_final(model, path):
 
 
 app = FastAPI()
-app.mount('/transformed_images', StaticFiles(directory="transformed_images"), name='files')
+app.mount('/transformed_images', StaticFiles(directory="/app/transformed_images"), name='files')
 
 # class pydentic для детекции строки
 class FilePath(BaseModel):

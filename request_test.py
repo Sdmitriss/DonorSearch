@@ -7,8 +7,12 @@ import  matplotlib.pyplot as plt
 import numpy as np
 
 
-# Тестовый маршрут : инициализирует  окно для ввода  url, path , делает postrequest  к post маршруту
+# Тестовый маршрут : инициализирует  окно для ввода  url, path , делает post request  
+# Распечатывает документ
 
+
+
+# функция создает окно для ввода path  или url,  возвращает path : str ,  cancel :  bool для обработки закрытия окна
 def out_form():
     root = tk.Tk() # Создаем главное окно
     root.title("Введите адрес документа")
@@ -19,7 +23,7 @@ def out_form():
 
     entry = tk.Text(root, width=70, height=3)  # Ширина поля ввода
     entry.pack(pady=10)
-    entry.insert(tk.INSERT, "data\\405___e989c7d20dd04eec89042272ca1a84b3_3.png") 
+    entry.insert(tk.INSERT, 'input_images\\405___87bdaaa7ba5247c1969398f16a341917_1.png') 
     
     button_frame = tk.Frame(root) # фрейм для кнопок
     button_frame.pack(side=tk.BOTTOM, fill=tk.X)
@@ -47,7 +51,7 @@ def out_form():
   
     return  path, cancel
 
-
+#  post request +  индикатор загрузки
 def make_request(url_base, data):
     
     root = tk.Tk()
@@ -59,12 +63,12 @@ def make_request(url_base, data):
     root.destroy()
     return response
 
-
+# Тестовая печать документа
 def image_show(url):
     response = requests.get(url)
     image = Image.open(BytesIO(response.content))
         
-    plt.figure(figsize=(4,3))
+    plt.figure(figsize=(8,6))
     plt.imshow(image) 
     
     plt.xticks([]) 
@@ -73,8 +77,6 @@ def image_show(url):
     plt.show()
     
 
-# Пример вызова функции
-# make_request_and_close(url_base, data)
 
 
 cancel='True'
@@ -82,11 +84,13 @@ while cancel:
     path ,cancel= out_form()
     if not cancel:
         break
-
+    print (path)
     url_base='http://127.0.0.1:8000/forms/'
     data = {"path": path}
-    # response =requests.post(url_base, json=data)
+    
     response=make_request(url_base,data)
     print(response.json())
-    image_show(response.json().get('save_url'))
+    
+    if response.json().get('save_url'):
+        image_show(response.json().get('save_url'))
    
